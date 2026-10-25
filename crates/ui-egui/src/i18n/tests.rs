@@ -4,7 +4,7 @@
 use std::collections::{BTreeSet, HashSet};
 
 use super::catalog::{Catalog, unescape};
-use super::lang::{name_sort_key, plural_czech, plural_east_slavic, plural_polish};
+use super::lang::{candidates, name_sort_key, plural_czech, plural_east_slavic, plural_hebrew, plural_polish};
 use super::{LANGUAGES, Lang, LangInfo, lang_from_tag, message, tr, trn};
 
 /// Each catalog's rows as (line number, context, source, translation), split exactly as the
@@ -242,6 +242,17 @@ fn polish_plural_rule_works() {
     assert_eq!(trn(Lang::PL, 21, "{n} app", "{n} apps"), "21 aplikacji");
     // A key the Polish catalog doesn't carry falls back to the English forms.
     assert_eq!(trn(Lang::PL, 3, "{n} unknown item", "{n} unknown items"), "3 unknown items");
+}
+
+#[test]
+fn hebrew_plural_rule_and_legacy_tag_candidates_work() {
+    assert_eq!(plural_hebrew(1), 0);
+    assert_eq!(plural_hebrew(2), 1);
+    for n in [0, 3, 4, 10, 11, 20, 21, 100] {
+        assert_eq!(plural_hebrew(n), 2, "{n}");
+    }
+    assert_eq!(candidates("iw_IL.UTF-8"), vec!["he-il", "he"]);
+    assert_eq!(candidates("iw"), vec!["he"]);
 }
 
 #[test]
