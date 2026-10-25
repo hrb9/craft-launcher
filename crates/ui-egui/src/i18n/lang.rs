@@ -13,30 +13,33 @@ use super::detect::system_lang;
 pub enum Script {
     Chinese,
     Japanese,
+    Hebrew,
 }
 
 impl Script {
     /// Every script a language can be written in.
-    pub const ALL: [Script; 2] = [Script::Chinese, Script::Japanese];
+    pub const ALL: [Script; 3] = [Script::Chinese, Script::Japanese, Script::Hebrew];
 }
 
 /// One supported UI language.
 pub struct LangInfo {
-    /// Canonical BCP 47 code (`en`, `ru`, `zh-CN`, `de`, `fr`, `pt-BR`, `es`, `cs`, `pl`, `hu`, `ja`).
+    /// Canonical BCP 47 code (`en`, `ru`, `zh-CN`, `de`, `fr`, `pt-BR`, `es`, `cs`, `pl`, `hu`, `ja`, `he`).
     /// Also the `interfaceLanguage` value.
     pub code: &'static str,
     /// The language's name in itself, shown in the Preferences dropdown.
     pub name: &'static str,
     /// The language's name in English, shown instead where its own script can't be drawn.
     pub english_name: &'static str,
-    /// The writing system this language is drawn in, or `None` if it needs no system CJK font.
+    /// The writing system this language is drawn in, or `None` if it needs no system font.
     pub script: Option<Script>,
+    /// Whether this language is written right-to-left (Hebrew, Arabic).
+    pub rtl: bool,
     /// Catalog file contents (empty for the built-in English).
     pub source: &'static str,
     /// Plural form index for a count (English, German, Spanish and Hungarian: 0 = one, 1 = other;
     /// Russian: 0 = one, 1 = few, 2 = many; Czech: 0 = one, 1 = few, 2 = other; Polish: 0 = one only
-    /// for 1, 1 = few, 2 = many; French: 0 = one for 0 and 1; a language whose nouns don't inflect
-    /// for number: always 0).
+    /// for 1, 1 = few, 2 = many; Hebrew: 0 = one, 1 = two, 2 = other; French: 0 = one for 0 and 1;
+    /// a language whose nouns don't inflect for number: always 0).
     pub plural: fn(u64) -> usize,
     /// Number of plural forms the catalog's `@plural` rows carry (checked by tests).
     pub plural_forms: usize,
@@ -93,6 +96,16 @@ pub(super) fn plural_polish(n: u64) -> usize {
     }
 }
 
+/// Hebrew integer counts (CLDR 44+): 1 is `one` (0), 2 is `two` (1), everything else is `other` (2).
+#[cfg_attr(not(test), allow(dead_code))]
+pub(super) fn plural_hebrew(n: u64) -> usize {
+    match n {
+        1 => 0,
+        2 => 1,
+        _ => 2,
+    }
+}
+
 /// The registry. English first: it is the fallback and the source language.
 pub static LANGUAGES: [LangInfo; 11] = [
     LangInfo {
@@ -100,6 +113,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "English",
         english_name: "English",
         script: None,
+        rtl: false,
         source: "",
         plural: plural_one_other,
         plural_forms: 2,
@@ -111,6 +125,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Русский",
         english_name: "Russian",
         script: None,
+        rtl: false,
         source: include_str!("ru.tsv"),
         plural: plural_east_slavic,
         plural_forms: 3,
@@ -122,6 +137,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "简体中文",
         english_name: "Simplified Chinese",
         script: Some(Script::Chinese),
+        rtl: false,
         source: include_str!("zh-CN.tsv"),
         plural: plural_none,
         plural_forms: 1,
@@ -133,6 +149,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Deutsch",
         english_name: "German",
         script: None,
+        rtl: false,
         source: include_str!("de.tsv"),
         plural: plural_one_other,
         plural_forms: 2,
@@ -144,6 +161,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Français",
         english_name: "French",
         script: None,
+        rtl: false,
         source: include_str!("fr.tsv"),
         plural: plural_zero_one,
         plural_forms: 2,
@@ -155,6 +173,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Português (Brasil)",
         english_name: "Portuguese (Brazil)",
         script: None,
+        rtl: false,
         source: include_str!("pt-BR.tsv"),
         plural: plural_one_other,
         plural_forms: 2,
@@ -166,6 +185,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Español",
         english_name: "Spanish",
         script: None,
+        rtl: false,
         source: include_str!("es.tsv"),
         plural: plural_one_other,
         plural_forms: 2,
@@ -177,6 +197,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Čeština",
         english_name: "Czech",
         script: None,
+        rtl: false,
         source: include_str!("cs.tsv"),
         plural: plural_czech,
         plural_forms: 3,
@@ -188,6 +209,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Polski",
         english_name: "Polish",
         script: None,
+        rtl: false,
         source: include_str!("pl.tsv"),
         plural: plural_polish,
         plural_forms: 3,
@@ -199,6 +221,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "Magyar",
         english_name: "Hungarian",
         script: None,
+        rtl: false,
         source: include_str!("hu.tsv"),
         plural: plural_one_other,
         plural_forms: 2,
@@ -210,6 +233,7 @@ pub static LANGUAGES: [LangInfo; 11] = [
         name: "日本語",
         english_name: "Japanese",
         script: Some(Script::Japanese),
+        rtl: false,
         source: include_str!("ja.tsv"),
         plural: plural_none,
         plural_forms: 1,
@@ -300,9 +324,14 @@ impl Lang {
         self.0.script.is_some()
     }
 
-    /// The writing system this language is drawn in, if it needs a system CJK font.
+    /// The writing system this language is drawn in, if it needs a system font.
     pub fn script(self) -> Option<Script> {
         self.0.script
+    }
+
+    /// Is this language written right-to-left?
+    pub fn rtl(self) -> bool {
+        self.0.rtl
     }
 
     /// Does this language's catalog claim to cover every `tl!` literal?
@@ -337,7 +366,11 @@ pub(super) fn candidates(tag: &str) -> Vec<String> {
         return Vec::new();
     }
     let base = head.replace('_', "-").to_ascii_lowercase();
-    let parts: Vec<&str> = base.split('-').filter(|p| !p.is_empty()).take(MAX_SUBTAGS).collect();
+    let mut parts: Vec<&str> = base.split('-').filter(|p| !p.is_empty()).take(MAX_SUBTAGS).collect();
+    // Normalize the deprecated ISO 639-1 code for Hebrew (`iw` -> `he`).
+    if let Some(first @ &mut "iw") = parts.first_mut() {
+        *first = "he";
+    }
     (1..=parts.len()).rev().filter_map(|n| parts.get(..n)).map(|p| p.join("-")).collect()
 }
 
