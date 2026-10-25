@@ -253,6 +253,15 @@ fn hebrew_plural_rule_and_legacy_tag_candidates_work() {
     }
     assert_eq!(candidates("iw_IL.UTF-8"), vec!["he-il", "he"]);
     assert_eq!(candidates("iw"), vec!["he"]);
+    for tag in ["he", "he-IL", "he_IL.UTF-8", "iw", "iw-IL", "iw_IL.UTF-8", "HE_il"] {
+        assert_eq!(lang_from_tag(tag), Some(Lang::HE), "{tag}");
+    }
+    assert!(Lang::HE.rtl());
+    assert_eq!(Lang::HE.name(), "עברית");
+    assert_eq!(Lang::HE.english_name(), "Hebrew");
+    assert_eq!(trn(Lang::HE, 1, "{n} app", "{n} apps"), "יישום 1");
+    assert_eq!(trn(Lang::HE, 2, "{n} app", "{n} apps"), "2 יישומים");
+    assert_eq!(trn(Lang::HE, 5, "{n} app", "{n} apps"), "5 יישומים");
 }
 
 #[test]
