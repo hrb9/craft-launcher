@@ -26,7 +26,7 @@ fn row(ui: &mut Ui, label: &str, control_width: f32, add: &mut dyn FnMut(&mut Ui
     } else {
         let outer = if rtl { egui::Layout::right_to_left(egui::Align::Center) } else { egui::Layout::left_to_right(egui::Align::Center) };
         let inner = if rtl { egui::Layout::left_to_right(egui::Align::Center) } else { egui::Layout::right_to_left(egui::Align::Center) };
-        ui.with_layout(outer, |ui| {
+        ui.allocate_ui_with_layout(vec2(ui.available_width(), theme::CONTROL_H), outer, |ui| {
             let label = ui.label(label);
             ui.with_layout(inner, |ui| {
                 // A ComboBox grows to the width its layout offers, so leaving it loose made it
@@ -42,12 +42,14 @@ fn row(ui: &mut Ui, label: &str, control_width: f32, add: &mut dyn FnMut(&mut Ui
     }
 }
 
+/// Draws a secondary muted caption line inside a settings panel.
 fn note(ui: &mut Ui, text: &str) {
     let t = Tokens::get(ui.ctx());
     ui.label(RichText::new(text).size(12.0).color(t.muted));
 }
 
 impl LauncherUi {
+    /// Renders the Settings modal dialog and returns `true` when the user closes it.
     pub(crate) fn settings_dialog(&mut self, ui: &mut Ui, host: &mut dyn Host) -> bool {
         let t = Tokens::get(ui.ctx());
         let size = sheet::size(ui.ctx(), vec2(1000.0, 820.0));
@@ -94,14 +96,14 @@ impl LauncherUi {
                 } else {
                     egui::Layout::right_to_left(egui::Align::Center)
                 };
-                ui.with_layout(end, |ui| {
+                ui.allocate_ui_with_layout(vec2(ui.available_width(), theme::CONTROL_H), end, |ui| {
                     close = widgets::button(ui, tl!("Done"), Kind::Primary, 90.0).clicked();
                 });
             } else {
                 let rtl = crate::i18n::current().rtl();
                 let outer = if rtl { egui::Layout::right_to_left(egui::Align::Center) } else { egui::Layout::left_to_right(egui::Align::Center) };
                 let inner = if rtl { egui::Layout::left_to_right(egui::Align::Center) } else { egui::Layout::right_to_left(egui::Align::Center) };
-                ui.with_layout(outer, |ui| {
+                ui.allocate_ui_with_layout(vec2(ui.available_width(), theme::CONTROL_H), outer, |ui| {
                     quit(ui, host);
                     ui.with_layout(inner, |ui| {
                         close = widgets::button(ui, tl!("Done"), Kind::Primary, 90.0).clicked();

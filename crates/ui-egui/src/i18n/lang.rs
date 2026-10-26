@@ -97,7 +97,6 @@ pub(super) fn plural_polish(n: u64) -> usize {
 }
 
 /// Hebrew integer counts (CLDR 44+): 1 is `one` (0), 2 is `two` (1), everything else is `other` (2).
-#[cfg_attr(not(test), allow(dead_code))]
 pub(super) fn plural_hebrew(n: u64) -> usize {
     match n {
         1 => 0,
@@ -107,7 +106,7 @@ pub(super) fn plural_hebrew(n: u64) -> usize {
 }
 
 /// The registry. English first: it is the fallback and the source language.
-pub static LANGUAGES: [LangInfo; 11] = [
+pub static LANGUAGES: [LangInfo; 12] = [
     LangInfo {
         code: "en",
         name: "English",
@@ -240,9 +239,22 @@ pub static LANGUAGES: [LangInfo; 11] = [
         complete_menus: true,
         catalog: OnceLock::new(),
     },
+    LangInfo {
+        code: "he",
+        name: "עברית",
+        english_name: "Hebrew",
+        script: Some(Script::Hebrew),
+        rtl: true,
+        source: "",
+        plural: plural_hebrew,
+        plural_forms: 3,
+        complete_menus: false,
+        catalog: OnceLock::new(),
+    },
 ];
 
 impl LangInfo {
+    /// Lazily parses and returns this language's translation catalog.
     pub(super) fn catalog(&self) -> &Catalog {
         self.catalog.get_or_init(|| Catalog::parse(self.source))
     }
@@ -278,7 +290,9 @@ impl Lang {
     pub const PL: Lang = Lang(&LANGUAGES[8]);
     pub const HU: Lang = Lang(&LANGUAGES[9]);
     pub const JA: Lang = Lang(&LANGUAGES[10]);
+    pub const HE: Lang = Lang(&LANGUAGES[11]);
 
+    /// Canonical BCP 47 language code (`en`, `he`, `zh-CN`, …).
     pub fn code(self) -> &'static str {
         self.0.code
     }
@@ -310,6 +324,7 @@ impl Lang {
         std::iter::once(Lang::EN).chain(rest).collect()
     }
 
+    /// The language's autonym (native display name).
     pub fn name(self) -> &'static str {
         self.0.name
     }
@@ -344,6 +359,7 @@ impl Lang {
         LANGUAGES.iter().position(|l| l.code == self.0.code).unwrap_or(0)
     }
 
+    /// Returns the parsed translation catalog for this language.
     pub(super) fn catalog(self) -> &'static Catalog {
         self.0.catalog()
     }

@@ -225,6 +225,7 @@ fn czech_plural_rule_works() {
     assert_eq!(trn(Lang::CS, 5, "{n} app", "{n} apps"), "5 aplikací");
 }
 
+/// Polish plural forms and English fallback for untranslated plural keys.
 #[test]
 fn polish_plural_rule_works() {
     // Polish says "one" only for 1 itself: 21, 31 and 101 take "many", unlike Russian.
@@ -244,6 +245,7 @@ fn polish_plural_rule_works() {
     assert_eq!(trn(Lang::PL, 3, "{n} unknown item", "{n} unknown items"), "3 unknown items");
 }
 
+/// CLDR 44+ Hebrew plural indices (one/two/other), legacy `iw` locale tag normalization, and `Lang::HE` resolution.
 #[test]
 fn hebrew_plural_rule_and_legacy_tag_candidates_work() {
     assert_eq!(plural_hebrew(1), 0);
@@ -253,8 +255,14 @@ fn hebrew_plural_rule_and_legacy_tag_candidates_work() {
     }
     assert_eq!(candidates("iw_IL.UTF-8"), vec!["he-il", "he"]);
     assert_eq!(candidates("iw"), vec!["he"]);
+    for tag in ["he", "he-IL", "he_IL.UTF-8", "iw", "iw-IL", "iw_IL.UTF-8", "HE_il"] {
+        assert_eq!(lang_from_tag(tag), Some(Lang::HE), "{tag}");
+    }
+    assert_eq!(Lang::from_code("he"), Some(Lang::HE));
+    assert!(Lang::HE.rtl());
 }
 
+/// Untranslated plural keys fall back to the English singular/plural form by count.
 #[test]
 fn untranslated_plurals_fall_back_to_english_by_count() {
     // Russian's rule says "one" for 21, but English says "other".

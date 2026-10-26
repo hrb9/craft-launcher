@@ -34,7 +34,8 @@ pub(crate) fn hero(ui: &mut Ui, icon: Option<ImageSource<'static>>, title: &str,
     let shown =
         Frame::new().fill(tint(t.accent, if t.dark { 0.09 } else { 0.07 })).inner_margin(Margin::symmetric(theme::PAD as i8, 18)).show(ui, |ui| {
             ui.set_width(ui.available_width());
-            ui.with_layout(row_layout, |ui| {
+            let row_h = if icon.is_some() { 44.0 } else { ui.spacing().interact_size.y };
+            ui.allocate_ui_with_layout(vec2(ui.available_width(), row_h), row_layout, |ui| {
                 if let Some(icon) = icon {
                     // Decorative: the heading beside it carries the title.
                     ui.add(egui::Image::new(icon).fit_to_exact_size(vec2(44.0, 44.0)));
@@ -84,47 +85,71 @@ pub(crate) fn columns(ui: &mut Ui, wide: bool, gap: f32, left: impl FnOnce(&mut 
         return;
     }
     let w = ((ui.available_width() - gap) / 2.0).floor();
-    let row_layout = if rtl { egui::Layout::right_to_left(egui::Align::TOP) } else { egui::Layout::left_to_right(egui::Align::TOP) };
-    ui.with_layout(row_layout, |ui| {
+    ui.horizontal_top(|ui| {
         ui.spacing_mut().item_spacing.x = gap;
-        ui.allocate_ui_with_layout(vec2(w, ui.available_height()), egui::Layout::top_down(align), |ui| {
-            ui.set_width(w);
-            left(ui);
-        });
-        ui.allocate_ui_with_layout(vec2(w, ui.available_height()), egui::Layout::top_down(align), |ui| {
-            ui.set_width(w);
-            right(ui);
-        });
+        if rtl {
+            ui.with_layout(egui::Layout::top_down(align), |ui| {
+                ui.set_width(w);
+                right(ui);
+            });
+            ui.with_layout(egui::Layout::top_down(align), |ui| {
+                ui.set_width(w);
+                left(ui);
+            });
+        } else {
+            ui.vertical(|ui| {
+                ui.set_width(w);
+                left(ui);
+            });
+            ui.vertical(|ui| {
+                ui.set_width(w);
+                right(ui);
+            });
+        }
     });
 }
 
 /// A titled box: a hairline frame with a small caps heading, for one group of settings.
 pub(crate) fn panel(ui: &mut Ui, title: &str, body: impl FnOnce(&mut Ui)) {
     let t = Tokens::get(ui.ctx());
-    let align = if crate::i18n::current().rtl() { egui::Align::Max } else { egui::Align::Min };
+    let rtl = crate::i18n::current().rtl();
     Frame::new().stroke(t.hairline()).inner_margin(theme::BOX_MARGIN).show(ui, |ui| {
         ui.set_width(ui.available_width());
-        ui.with_layout(egui::Layout::top_down(align), |ui| {
+        if rtl {
+            ui.with_layout(egui::Layout::top_down(egui::Align::Max), |ui| {
+                ui.set_width(ui.available_width());
+                widgets::hud(ui, title, t.faint);
+                ui.add_space(8.0);
+                body(ui);
+            });
+        } else {
             widgets::hud(ui, title, t.faint);
             ui.add_space(8.0);
             body(ui);
-        });
+        }
     });
     ui.add_space(14.0);
 }
 
-/// [`panel`], but the body also receives the heading's id so its control can be named by that
+/// [`panel`], passing the heading's accessibility node id to `body` so a lone control can name the
 /// visible heading (egui 0.37's `Response::labelled_by`), without adding a second identical label.
 pub(crate) fn panel_with_heading(ui: &mut Ui, title: &str, body: impl FnOnce(&mut Ui, egui::Id)) {
     let t = Tokens::get(ui.ctx());
-    let align = if crate::i18n::current().rtl() { egui::Align::Max } else { egui::Align::Min };
+    let rtl = crate::i18n::current().rtl();
     Frame::new().stroke(t.hairline()).inner_margin(theme::BOX_MARGIN).show(ui, |ui| {
         ui.set_width(ui.available_width());
-        ui.with_layout(egui::Layout::top_down(align), |ui| {
+        if rtl {
+            ui.with_layout(egui::Layout::top_down(egui::Align::Max), |ui| {
+                ui.set_width(ui.available_width());
+                let heading = widgets::hud(ui, title, t.faint);
+                ui.add_space(8.0);
+                body(ui, heading.id);
+            });
+        } else {
             let heading = widgets::hud(ui, title, t.faint);
             ui.add_space(8.0);
             body(ui, heading.id);
-        });
+        }
     });
     ui.add_space(14.0);
 }
