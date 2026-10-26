@@ -245,10 +245,10 @@ pub static LANGUAGES: [LangInfo; 12] = [
         english_name: "Hebrew",
         script: Some(Script::Hebrew),
         rtl: true,
-        source: "",
+        source: include_str!("he.tsv"),
         plural: plural_hebrew,
         plural_forms: 3,
-        complete_menus: false,
+        complete_menus: true,
         catalog: OnceLock::new(),
     },
 ];
