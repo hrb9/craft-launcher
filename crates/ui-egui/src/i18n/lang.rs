@@ -254,6 +254,7 @@ pub static LANGUAGES: [LangInfo; 12] = [
 ];
 
 impl LangInfo {
+    /// Lazily parses and returns this language's translation catalog.
     pub(super) fn catalog(&self) -> &Catalog {
         self.catalog.get_or_init(|| Catalog::parse(self.source))
     }
@@ -291,6 +292,7 @@ impl Lang {
     pub const JA: Lang = Lang(&LANGUAGES[10]);
     pub const HE: Lang = Lang(&LANGUAGES[11]);
 
+    /// Canonical BCP 47 language code (`en`, `he`, `zh-CN`, …).
     pub fn code(self) -> &'static str {
         self.0.code
     }
@@ -322,6 +324,7 @@ impl Lang {
         std::iter::once(Lang::EN).chain(rest).collect()
     }
 
+    /// The language's autonym (native display name).
     pub fn name(self) -> &'static str {
         self.0.name
     }
@@ -356,6 +359,7 @@ impl Lang {
         LANGUAGES.iter().position(|l| l.code == self.0.code).unwrap_or(0)
     }
 
+    /// Returns the parsed translation catalog for this language.
     pub(super) fn catalog(self) -> &'static Catalog {
         self.0.catalog()
     }

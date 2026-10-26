@@ -88,6 +88,7 @@ pub(crate) fn load(script: Script) -> Option<FontData> {
     None
 }
 
+/// Reads a font file up to [`MAX_FONT_BYTES`], returning `None` if missing, not a regular file, or oversized.
 fn read(path: &Path) -> Option<Vec<u8>> {
     let meta = std::fs::metadata(path).ok()?;
     if !meta.is_file() {
