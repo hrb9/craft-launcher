@@ -7,6 +7,7 @@
 
 	Launcher	Launcher
 	Craft App Suite	Craft App Suite
+	by {name}	מאת {name}
 	Open Source Tools for Creatives, Makers, and Builders	כלי קוד פתוח ליוצרים, מעצבים ובונים
 	Settings	הגדרות
 	Check for updates	בדוק עדכונים
@@ -155,6 +156,7 @@ designcraft	Page layout and publishing	עימוד דפים והוצאה לאור
 wordcraft	Writing and document design	כתיבה ועיצוב מסמכים
 deckcraft	Presentations and slide shows	מצגות ושקופיות
 gridcraft	Spreadsheets and data	גיליונות אלקטרוניים ונתונים
+solidcraft	Parametric 3D CAD	תיב״ם תלת־ממדי פרמטרי
 cadcraft	Computer-aided design and drafting	תיב״ם (תכנון ושרטוט בעזרת מחשב)
 soundcraft	Recording, editing and mixing audio	הקלטה, עריכה ומיקס של שמע
 figcraft	Interface design and prototyping	עיצוב ממשקים ואבות-טיפוס
@@ -349,3 +351,15 @@ filter	Installed	מותקנים
 	Show {n} more changes	הצג עוד {n} שינויים
 	Last updated: {date}	עודכן לאחרונה: {date}
 column	Version	גרסה
+column	Author	יוצר
+	Choose version	בחירת גרסה
+	latest {version}	אחרונה {version}
+	{version} (latest release)	{version} (גרסה אחרונה)
+	Launcher version	גרסת Launcher
+	Nightly	Nightly
+	Nightly (none published yet)	Nightly (טרם פורסם)
+	Install version {version}	התקנת גרסה {version}
+	Download selected version	הורדת הגרסה שנבחרה
+	Older launcher versions require a manual reinstall.	גרסאות קודמות של ה-Launcher דורשות התקנה ידנית מחדש.
+	Your files may not open in older versions.	ייתכן שהקבצים שלך לא ייפתחו בגרסאות קודמות.
+	Enable automatic installs in Settings to follow new nightly builds.	הפעל התקנות אוטומטיות בהגדרות כדי לקבל גרסאות Nightly חדשות.
