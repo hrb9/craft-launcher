@@ -58,13 +58,21 @@ pub fn hud(ui: &mut Ui, text: &str, color: Color32) -> Response {
 /// A mono label cut to one line with "…" where it is wider than `max_width`; the full text shows
 /// on hover and is what screen readers read.
 pub fn hud_elided(ui: &mut Ui, text: &str, color: Color32, max_width: f32) -> Response {
-    let format = egui::TextFormat {
-        font_id: egui::FontId::new(theme::HUD_SIZE, theme::mono()),
-        color,
-        extra_letter_spacing: theme::HUD_SPACING,
-        ..Default::default()
-    };
-    let mut job = egui::text::LayoutJob::single_section(text.to_uppercase(), format);
+    hud_elided_spans(ui, &[(text, color)], max_width)
+}
+
+/// [`hud_elided`] with each piece of the text in its own colour.
+pub fn hud_elided_spans(ui: &mut Ui, spans: &[(&str, Color32)], max_width: f32) -> Response {
+    let mut job = egui::text::LayoutJob::default();
+    for (text, color) in spans {
+        let format = egui::TextFormat {
+            font_id: egui::FontId::new(theme::HUD_SIZE, theme::mono()),
+            color: *color,
+            extra_letter_spacing: theme::HUD_SPACING,
+            ..Default::default()
+        };
+        job.append(&text.to_uppercase(), 0.0, format);
+    }
     if crate::i18n::current().rtl() {
         job.direction = egui::epaint::text::TextDirection::RightToLeft;
     }
@@ -72,8 +80,12 @@ pub fn hud_elided(ui: &mut Ui, text: &str, color: Color32, max_width: f32) -> Re
     let galley = ui.painter().layout_job(job);
     let elided = galley.elided;
     let (rect, resp) = ui.allocate_exact_size(galley.size(), Sense::hover());
-    paint_left(ui, rect, galley, color);
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, true, text));
+    let pos = egui::pos2(rect.left(), rect.center().y - galley.size().y / 2.0);
+    // Each piece keeps the colour it was laid out with; nothing overrides it.
+    let fallback = spans.first().map_or(Color32::PLACEHOLDER, |(_, c)| *c);
+    ui.painter().galley(pos, galley, fallback);
+    let text: String = spans.iter().map(|(t, _)| *t).collect();
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, true, &text));
     if elided { resp.on_hover_text(text) } else { resp }
 }
 
